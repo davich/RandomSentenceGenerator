@@ -23,34 +23,42 @@ object RandomSentenceGenerator {
   }
   
   def mapWordPaths(s:String) = {
-    val iterator = "[\\w\\']+".r.findAllIn(s).sliding(3)
+    val iterator = "[\\w\\']+|[\\.\\?\\!]+".r.findAllIn(s).sliding(3)
     val wordPaths:Map[(String, String), Array[String]] = Map()
+    val endOfSentenceRegex = "[\\.\\?\\!]+".r
 
-    while (iterator.hasNext){
-      val words = iterator.next()
-      val word1 = words(0).toLowerCase()
-      val word2 = words(1).toLowerCase()
-      val word3 = words(2).toLowerCase()
-      
-      if (wordPaths.contains((word1,word2))) {
-        wordPaths((word1,word2)) = Array.concat(wordPaths(word1,word2), Array(word3))
-      } else {
-        wordPaths += ((word1,word2) -> Array(word3))
+    while (iterator.hasNext) {
+      val tokens = iterator.next()
+      val includesEndOfSentence = tokens.exists(s => endOfSentenceRegex.pattern.matcher(s).matches)
+      if (!includesEndOfSentence) {
+        val words = cleanWords(tokens)
+        val word1 = words(0)
+        val word2 = words(1)
+        val word3 = words(2)
+        if (wordPaths.contains((word1,word2))) {
+          wordPaths((word1,word2)) = Array.concat(wordPaths(word1,word2), Array(word3))
+        } else {
+          wordPaths += ((word1,word2) -> Array(word3))
+        }
       }
     }
     wordPaths
+  }
+  def cleanWords(words : List[String]) = {
+    words.map(_.toLowerCase().replaceAll("^[^\\w]+", "").replaceAll("[^\\w]+$", ""))
   }
   
   def generateSentence(wordPaths:Map[(String, String), Array[String]]) = {
     var key = randomKey(wordPaths)
     val result = ListBuffer(key._1, key._2)
-    while (wordPaths(key).size > 0 &&
+    while (wordPaths.contains(key) &&
+        wordPaths(key).size > 0 &&
         result.size < 50) {
       val nextWord = randomNextWord(wordPaths, key)
       result += nextWord
       key = (key._2, nextWord)
     }
-    result.toList.mkString(" ")
+    result.mkString(" ")
   }
   
   def randomKey(wordPaths:Map[(String, String), Array[String]]) = {
