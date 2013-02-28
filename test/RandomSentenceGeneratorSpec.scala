@@ -1,15 +1,6 @@
 import org.scalatest._
 import scala.collection.mutable._
 
-// windows
-// scalac -cp lib\scalatest_2.10-1.9.1.jar;bin -d bin src\RandomSentenceGenerator.scala test\RandomSentenceGeneratorSpec.scala
-// scala -cp lib\scalatest_2.10-1.9.1.jar;bin org.scalatest.run RandomSentenceGeneratorSpec
-
-// other
-// scalac -cp lib/scalatest_2.10-1.9.1.jar:bin -d bin src/RandomSentenceGenerator.scala test/RandomSentenceGeneratorSpec.scala
-// scala -cp lib/scalatest_2.10-1.9.1.jar:bin org.scalatest.run RandomSentenceGeneratorSpec
-
-
 class RandomSentenceGeneratorSpec extends FlatSpec {
   
   behavior of "getFileContents"
@@ -26,6 +17,15 @@ class RandomSentenceGeneratorSpec extends FlatSpec {
     assert(result("is", "a").deep == Array("string").deep)
   }
   
+  it should "handle empty string" in {
+    assert(RandomSentenceGenerator.mapWordPaths("").size == 0)
+  }
+  
+  it should "handle not enough strings to make a map entry" in {
+    assert(RandomSentenceGenerator.mapWordPaths("one").size == 0)
+    assert(RandomSentenceGenerator.mapWordPaths("one two").size == 0)
+  }
+  
   it should "remove punctuation except apostropties" in {
     val result:Map[(String, String), Array[String]] = RandomSentenceGenerator.mapWordPaths("this/,> isn't an - integer $$")
     assert(result.size == 2)
@@ -40,6 +40,9 @@ class RandomSentenceGeneratorSpec extends FlatSpec {
   }
   
   it should "remove single quotes around words but leave in apostrophies" in {
+    // note: This still removes trailing apostrophies from words (eg. his parents' house).
+    // Considered out of scope of the exercise to distinguish between closing single quotes and 
+    // trailing apostrophies
     val result:Map[(String, String), Array[String]] = RandomSentenceGenerator.mapWordPaths("'this' 'isn't cool'")
     assert(result.size == 1)
     assert(result("this", "isn't").deep == Array("cool").deep)
@@ -70,6 +73,12 @@ class RandomSentenceGeneratorSpec extends FlatSpec {
     assert(wordCount == 3 || wordCount == 4)
   }
   
+  it should "handle empty file" in {
+    val map:Map[(String, String), Array[String]] = Map()
+    val result = RandomSentenceGenerator.generateSentence(map)
+    assert(result.size == 0)
+  }
+  
   "randomKey" should "pick a key at random from the list" in {
     val map:Map[(String, String), Array[String]] = Map()
     map(("to", "the")) =  Array("chopper")
@@ -89,9 +98,9 @@ class RandomSentenceGeneratorSpec extends FlatSpec {
     assert(nextWords.contains(result1))
     
     // It's always tricky to test if something is random. 
-    // This test might incorrectly fail 1 in 10,000,000,000 times
-    // which I think is a reasonable price to pay 
-    // (if run a million times a day, it should fail once every 27 years)
+    // This test might incorrectly fail 1 in 100,000,000,000 times
+    // which I think is reasonable. 
+    // (if run a million times a day, it should fail once every 274 years)
     var i = 0
     var difference = false
     for (i <- 1 to 10
@@ -101,9 +110,5 @@ class RandomSentenceGeneratorSpec extends FlatSpec {
       }
     }
     assert(difference)
-  }
-  
-  "main" should "work" in {
-    RandomSentenceGenerator.main(Array("data/test.txt"))
   }
 }
