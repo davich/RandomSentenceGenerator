@@ -5,7 +5,7 @@ ScalaTest 2.10-1.9.1
 From the root directory:
 
 to compile
-> scalac -cp lib/scalatest_2.10-1.9.1.jar -d bin src/RandomSentenceGenerator.scala test/RandomSentenceGeneratorSpec.scala
+> scalac -cp lib/scalatest_2.10-1.9.1.jar -d bin src/*.scala test/*.scala
 to run tests
 > scala -cp lib/scalatest_2.10-1.9.1.jar org.scalatest.tools.Runner -R bin
 to run program
